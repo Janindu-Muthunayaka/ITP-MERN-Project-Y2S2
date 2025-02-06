@@ -5,8 +5,8 @@ import * as XLSX from 'xlsx';
 function EmployeeDashBoardThree() {
   const handleNavigate = useNavigate();
   const [employeeData, setEmployeeData] = useState([]);
-  const [searchTerm, setSearchTerm] = useState(''); // State to hold search term
-  const [filteredData, setFilteredData] = useState([]); // State for filtered data
+  const [searchTerm, setSearchTerm] = useState(''); 
+  const [filteredData, setFilteredData] = useState([]);
 
   useEffect(() => {
     const fetchAttendanceData = async () => {
@@ -14,7 +14,7 @@ function EmployeeDashBoardThree() {
         const response = await fetch('http://localhost:8080/api/GetAttendance');
         const data = await response.json();
         setEmployeeData(data);
-        setFilteredData(data); // Initialize filtered data
+        setFilteredData(data); 
       } catch (error) {
         console.error('Error fetching attendance data:', error);
       }
@@ -23,14 +23,12 @@ function EmployeeDashBoardThree() {
     fetchAttendanceData();
   }, []);
 
-  // Update filtered data whenever searchTerm changes
   useEffect(() => {
     const filtered = employeeData.filter(record =>
-      record.EmpID.toString() === searchTerm // Filter by exact Employee ID
+      record.EmpID.toString() === searchTerm
     );
-    setFilteredData(filtered.length > 0 ? filtered : []); // Ensure empty state if no match found
+    setFilteredData(filtered.length > 0 ? filtered : []); 
   }, [searchTerm, employeeData]);
-
 
   const handleDelete = async (AttID) => {
     if (window.confirm("Are you sure you want to delete this attendance record?")) {
@@ -41,7 +39,7 @@ function EmployeeDashBoardThree() {
         if (response.ok) {
           alert('Attendance record deleted successfully');
           setEmployeeData(prev => prev.filter(emp => emp.AttID !== AttID));
-          setFilteredData(prev => prev.filter(emp => emp.AttID !== AttID)); // Update filtered data
+          setFilteredData(prev => prev.filter(emp => emp.AttID !== AttID)); 
         } else {
           const errorText = await response.text();
           alert('Failed to delete attendance record: ' + errorText);
@@ -52,6 +50,15 @@ function EmployeeDashBoardThree() {
     }
   };
 
+  const handleExport = () => {
+    // Convert filtered data to a worksheet
+    const ws = XLSX.utils.json_to_sheet(filteredData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'AttendanceData');
+
+    // Write to file
+    XLSX.writeFile(wb, 'Employee_Attendance_Report.xlsx');
+  };
 
   return (
     <div>
@@ -140,7 +147,9 @@ function EmployeeDashBoardThree() {
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{ padding: '5px', marginLeft: '10px' }}
           />
-          
+          <button onClick={handleExport} className="download-button">
+            Download as Excel
+          </button>
         </div>
         <div className="tableContainer">
           <table>
@@ -163,7 +172,7 @@ function EmployeeDashBoardThree() {
                   <td>{record.WorkHours}</td>
                   <td>{record.OTHours || 0}</td>
                   <td>
-                  <button
+                    <button
                       className="buttonX spaced-buttons"
                       style={{ backgroundColor: '#f7c600', color: 'white' }}
                       onClick={() => handleNavigate(`/EditAttendance?AttID=${record.AttID}&EmpID=${record.EmpID}&EmpName=${encodeURIComponent(record.EmpName)}&WorkDate=${record.WorkDate}&WorkHours=${record.WorkHours}&OTHours=${record.OTHours}`)}
